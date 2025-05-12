@@ -6,38 +6,42 @@ import Navbar from '@/components/Navbar';
 import InfoCard from '@/components/InfoCard';
 import Footer from '@/components/Footer';
 import { Book, Home, Bed, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/lib/auth';
 
 const Index = () => {
+  const { user, isAdmin } = useAuth();
+
   const handleLoginClick = (type: 'student' | 'admin') => {
     console.log(`${type} login clicked`);
-    // Future navigation logic would go here
+    // Navigation is handled by the Link component
   };
 
   const infoCards = [
     {
       title: "Hostel Rules",
       icon: Book,
-      onClick: () => console.log("Hostel rules clicked")
+      onClick: () => {}
     },
     {
       title: "Accommodation Details",
       icon: Bed,
-      onClick: () => console.log("Accommodation details clicked")
+      onClick: () => {}
     },
     {
       title: "Facilities",
       icon: Home,
-      onClick: () => console.log("Facilities clicked")
+      onClick: () => {}
     },
     {
       title: "Anti-Ragging",
       icon: Book,
-      onClick: () => console.log("Anti-ragging clicked")
+      onClick: () => {}
     },
     {
       title: "Authorities",
       icon: Book,
-      onClick: () => console.log("Authorities clicked")
+      onClick: () => {}
     }
   ];
 
@@ -59,30 +63,51 @@ const Index = () => {
             </h2>
             
             <div className="flex flex-col md:flex-row gap-4 justify-center mb-8">
-              <Button 
-                size="lg" 
-                className="bg-hostel-primary hover:bg-hostel-primary/90 text-white"
-                onClick={() => handleLoginClick('student')}
-              >
-                Student Login <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button 
-                size="lg" 
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                onClick={() => handleLoginClick('admin')}
-              >
-                Admin Login <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              {user ? (
+                <Button 
+                  size="lg" 
+                  className="bg-hostel-primary hover:bg-hostel-primary/90 text-white"
+                  asChild
+                >
+                  <Link to={isAdmin ? "/admin" : "/dashboard"}>
+                    Go to {isAdmin ? "Admin Dashboard" : "Student Dashboard"} <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    size="lg" 
+                    className="bg-hostel-primary hover:bg-hostel-primary/90 text-white"
+                    onClick={() => handleLoginClick('student')}
+                    asChild
+                  >
+                    <Link to="/auth">
+                      Student Login <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                    onClick={() => handleLoginClick('admin')}
+                    asChild
+                  >
+                    <Link to="/auth">
+                      Admin Login <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {infoCards.map((card, index) => (
-                <InfoCard
-                  key={index}
-                  title={card.title}
-                  icon={card.icon}
-                  onClick={card.onClick}
-                />
+                <Link to="/rules" key={index}>
+                  <InfoCard
+                    title={card.title}
+                    icon={card.icon}
+                    onClick={card.onClick}
+                  />
+                </Link>
               ))}
             </div>
           </div>
