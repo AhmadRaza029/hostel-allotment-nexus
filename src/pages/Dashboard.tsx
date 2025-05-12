@@ -59,7 +59,10 @@ const Dashboard = () => {
           }
 
           if (appData && appData.length > 0) {
-            setApplication(appData[0]);
+            setApplication({
+              ...appData[0],
+              status: appData[0].status as "PENDING" | "APPROVED" | "REJECTED"
+            });
           }
 
           // Fetch settings
@@ -74,8 +77,9 @@ const Dashboard = () => {
           }
 
           if (settingsData) {
-            const startDate = new Date(settingsData.value.start);
-            const endDate = new Date(settingsData.value.end);
+            const value = settingsData.value as { start: string; end: string };
+            const startDate = new Date(value.start);
+            const endDate = new Date(value.end);
             const now = new Date();
             
             setSettings({

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -13,16 +12,18 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Application, Student } from '@/types';
+import { Application, Student, JsonValue } from '@/types';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Download, FileText, Home, Users, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
 
+type ApplicationWithStudent = Application & { student: Student };
+
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const [applications, setApplications] = useState<(Application & { student: Student })[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<(Application & { student: Student })[]>([]);
+  const [applications, setApplications] = useState<ApplicationWithStudent[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<ApplicationWithStudent[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState({
     status: 'all',
@@ -56,6 +57,7 @@ const AdminDashboard = () => {
         // Transform data to match our expected format
         const transformedData = data.map(item => ({
           ...item,
+          status: item.status as "PENDING" | "APPROVED" | "REJECTED",
           student: item.student as Student
         }));
 
@@ -117,7 +119,7 @@ const AdminDashboard = () => {
     setFilteredApplications(result);
   }, [applications, filter, searchTerm]);
 
-  const handleStatusUpdate = async (applicationId: string, status: string, remarks?: string) => {
+  const handleStatusUpdate = async (applicationId: string, status: "PENDING" | "APPROVED" | "REJECTED", remarks?: string) => {
     try {
       const updateData: any = { status };
       if (remarks) {
@@ -184,8 +186,10 @@ const AdminDashboard = () => {
         .eq('key', 'hostel_fees')
         .single();
         
+      const feeValue = feeData.value as JsonValue;
       const feeAmount = application.category === 'GENERAL' ? 
-        feeData.value.general : feeData.value.reserved;
+        (feeValue as {general: number, reserved: number}).general : 
+        (feeValue as {general: number, reserved: number}).reserved;
 
       // Create allocation
       const { error } = await supabase

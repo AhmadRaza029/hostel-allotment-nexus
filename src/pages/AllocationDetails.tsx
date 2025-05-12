@@ -37,7 +37,10 @@ const AllocationDetails = () => {
             .single();
 
           if (appError) throw appError;
-          setApplication(appData);
+          setApplication({
+            ...appData,
+            status: appData.status as "PENDING" | "APPROVED" | "REJECTED"
+          });
 
           // Get allocation details
           const { data: allocData, error: allocError } = await supabase
@@ -47,7 +50,10 @@ const AllocationDetails = () => {
             .single();
 
           if (allocError) throw allocError;
-          setAllocation(allocData);
+          setAllocation({
+            ...allocData,
+            payment_status: allocData.payment_status as "PENDING" | "COMPLETED" | "FAILED"
+          });
 
           // Get hostel details
           const { data: hostelData, error: hostelError } = await supabase
@@ -94,7 +100,7 @@ const AllocationDetails = () => {
       // Update local state
       setAllocation({
         ...allocation,
-        payment_status: 'COMPLETED',
+        payment_status: "COMPLETED",
         updated_at: new Date().toISOString()
       });
 

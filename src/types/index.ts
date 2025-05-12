@@ -50,3 +50,11 @@ export type Allocation = {
   created_at: string;
   updated_at: string;
 };
+
+export type JsonValue = 
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: JsonValue }
+  | JsonValue[];

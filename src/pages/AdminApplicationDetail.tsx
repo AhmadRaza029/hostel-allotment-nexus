@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
@@ -11,8 +10,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Application, Student, Hostel, Allocation } from '@/types';
-import { AlertCircle, AlertTriangle, CalendarIcon, Check, CheckCircle, FileText, Loader2, MapPin, School, User, XCircle } from 'lucide-react';
+import { Application, Student, Hostel, Allocation, JsonValue } from '@/types';
+import { AlertCircle, AlertTriangle, CalendarIcon, Check, CheckCircle, FileText, Home, Loader2, MapPin, School, User, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -40,7 +39,10 @@ const AdminApplicationDetail = () => {
           .single();
 
         if (appError) throw appError;
-        setApplication(appData);
+        setApplication({
+          ...appData,
+          status: appData.status as "PENDING" | "APPROVED" | "REJECTED"
+        });
         setRemarks(appData.remarks || '');
 
         // Fetch student details
@@ -61,8 +63,11 @@ const AdminApplicationDetail = () => {
             .eq('application_id', id)
             .single();
 
-          if (!allocError) {
-            setAllocation(allocData);
+          if (!allocError && allocData) {
+            setAllocation({
+              ...allocData,
+              payment_status: allocData.payment_status as "PENDING" | "COMPLETED" | "FAILED"
+            });
           }
         }
 
@@ -86,12 +91,12 @@ const AdminApplicationDetail = () => {
     fetchData();
   }, [id, navigate]);
 
-  const handleStatusUpdate = async (status: string) => {
+  const handleStatusUpdate = async (status: "PENDING" | "APPROVED" | "REJECTED") => {
     if (!application) return;
 
     setIsSubmitting(true);
     try {
-      const updateData: any = { 
+      const updateData = { 
         status, 
         remarks: remarks || null,
         updated_at: new Date().toISOString()
@@ -139,8 +144,10 @@ const AdminApplicationDetail = () => {
         .eq('key', 'hostel_fees')
         .single();
         
+      const feeValue = feeData.value as JsonValue;
       const feeAmount = application.category === 'GENERAL' ? 
-        feeData.value.general : feeData.value.reserved;
+        (feeValue as {general: number, reserved: number}).general : 
+        (feeValue as {general: number, reserved: number}).reserved;
 
       // Create allocation
       const { data, error } = await supabase
@@ -157,7 +164,10 @@ const AdminApplicationDetail = () => {
 
       if (error) throw error;
       
-      setAllocation(data);
+      setAllocation({
+        ...data,
+        payment_status: data.payment_status as "PENDING" | "COMPLETED" | "FAILED"
+      });
       toast.success('Room allocated successfully');
     } catch (error) {
       console.error('Error allocating room:', error);
