@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { formatDistanceToNow } from 'date-fns';
-import { AlertCircle, AlertTriangle, CheckCircle, FileText, Home, Loader2, Receipt, User } from 'lucide-react';
+import { AlertCircle, AlertTriangle, BookOpen, CheckCircle, FileText, Home, Loader2, Receipt, User } from 'lucide-react';
 import { Application, Allocation, Student, Hostel } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -52,7 +52,11 @@ const Dashboard = () => {
         if (appError) throw appError;
         
         if (appData && appData.length > 0) {
-          setApplication(appData[0]);
+          // Cast the status to the appropriate type
+          setApplication({
+            ...appData[0],
+            status: appData[0].status as "PENDING" | "APPROVED" | "REJECTED"
+          });
           
           // If application is approved, fetch allocation
           if (appData[0].status === 'APPROVED') {
@@ -63,7 +67,11 @@ const Dashboard = () => {
               .single();
               
             if (!allocError && allocData) {
-              setAllocation(allocData);
+              // Cast the payment_status to the appropriate type
+              setAllocation({
+                ...allocData,
+                payment_status: allocData.payment_status as "PENDING" | "COMPLETED" | "FAILED"
+              });
               setPendingFees(allocData.payment_amount || 0);
               
               // Fetch hostel info
