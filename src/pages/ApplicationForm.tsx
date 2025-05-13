@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,7 +26,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { AlertCircle, BookOpen, Loader2, MapPin, Upload } from 'lucide-react';
+import { AlertCircle, BookOpen, FileText, Loader2, MapPin, Upload } from 'lucide-react';
 import { Hostel, Student } from '@/types';
 
 const formSchema = z.object({
@@ -53,6 +54,10 @@ const ApplicationForm = () => {
   const [hostels, setHostels] = useState<Hostel[]>([]);
   const [hasExistingApplication, setHasExistingApplication] = useState(false);
   const [applicationPeriodOpen, setApplicationPeriodOpen] = useState(true);
+  const [photoIdFile, setPhotoIdFile] = useState<File | null>(null);
+  const [incomeCertFile, setIncomeCertFile] = useState<File | null>(null);
+  const [paymentSlipFile, setPaymentSlipFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -142,11 +147,55 @@ const ApplicationForm = () => {
     fetchData();
   }, [user, navigate]);
 
+  // Function to upload files to Supabase storage
+  const uploadFile = async (file: File, path: string) => {
+    try {
+      if (!user) throw new Error('User not authenticated');
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${path}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('hostel-documents')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      return filePath;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw error;
+    }
+  };
+
   const onSubmit = async (values: FormValues) => {
     setSubmitting(true);
+    setUploading(true);
+    
     try {
+      if (!user) throw new Error('User not authenticated');
+      
       const { academicYear, currentYear, cgpa, homeAddress, distanceKm, annualIncome, category, hostelPreferences } = values;
-
+      
+      // Upload files if provided
+      let photoIdUrl: string | null = null;
+      let incomeCertUrl: string | null = null;
+      let paymentReceiptUrl: string | null = null;
+      
+      if (photoIdFile) {
+        photoIdUrl = await uploadFile(photoIdFile, 'photo_id');
+      }
+      
+      if (incomeCertFile) {
+        incomeCertUrl = await uploadFile(incomeCertFile, 'income_cert');
+      }
+      
+      if (paymentSlipFile) {
+        paymentReceiptUrl = await uploadFile(paymentSlipFile, 'payment_slip');
+      }
+      
+      // Create application record
       const { data, error } = await supabase
         .from('applications')
         .insert([
@@ -160,6 +209,9 @@ const ApplicationForm = () => {
             annual_income: annualIncome ? parseInt(annualIncome) : null,
             category: category || null,
             hostel_preference: hostelPreferences,
+            photo_id_url: photoIdUrl,
+            income_cert_url: incomeCertUrl,
+            payment_slip_url: paymentReceiptUrl, // New field
             status: 'PENDING',
           },
         ])
@@ -176,6 +228,26 @@ const ApplicationForm = () => {
       toast.error("Failed to submit application. Please try again.");
     } finally {
       setSubmitting(false);
+      setUploading(false);
+    }
+  };
+
+  // File input handlers
+  const handlePhotoIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setPhotoIdFile(e.target.files[0]);
+    }
+  };
+  
+  const handleIncomeCertChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setIncomeCertFile(e.target.files[0]);
+    }
+  };
+  
+  const handlePaymentSlipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setPaymentSlipFile(e.target.files[0]);
     }
   };
 
@@ -389,6 +461,68 @@ const ApplicationForm = () => {
                     )}
                   />
                   
+                  {/* Document Upload Section */}
+                  <div className="space-y-4 border p-4 rounded-md bg-gray-50">
+                    <h3 className="font-medium text-lg">Required Documents</h3>
+                    
+                    <div className="space-y-2">
+                      <FormLabel htmlFor="photo-id">Photo ID (Aadhar Card or Residence Certificate)</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="photo-id"
+                          type="file"
+                          onChange={handlePhotoIdChange}
+                          accept=".jpg,.jpeg,.png,.pdf"
+                        />
+                        {photoIdFile && (
+                          <div className="text-sm text-green-600 flex items-center gap-1">
+                            <FileText className="h-4 w-4" /> {photoIdFile.name}
+                          </div>
+                        )}
+                      </div>
+                      <FormDescription>
+                        Upload a scanned copy or clear photo of your ID proof. (Max size: 2MB)
+                      </FormDescription>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <FormLabel htmlFor="income-cert">Income Certificate (if applicable)</FormLabel>
+                      <Input
+                        id="income-cert"
+                        type="file"
+                        onChange={handleIncomeCertChange}
+                        accept=".jpg,.jpeg,.png,.pdf"
+                      />
+                      {incomeCertFile && (
+                        <div className="text-sm text-green-600 flex items-center gap-1">
+                          <FileText className="h-4 w-4" /> {incomeCertFile.name}
+                        </div>
+                      )}
+                      <FormDescription>
+                        Required for fee concessions and priority allocation. (Max size: 2MB)
+                      </FormDescription>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <FormLabel htmlFor="payment-slip" className="font-medium">University Payment Receipt</FormLabel>
+                      <Input
+                        id="payment-slip"
+                        type="file"
+                        onChange={handlePaymentSlipChange}
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        required
+                      />
+                      {paymentSlipFile && (
+                        <div className="text-sm text-green-600 flex items-center gap-1">
+                          <FileText className="h-4 w-4" /> {paymentSlipFile.name}
+                        </div>
+                      )}
+                      <FormDescription>
+                        Upload your university fee payment receipt. This is required for processing your application.
+                      </FormDescription>
+                    </div>
+                  </div>
+                  
                   <div>
                     <FormLabel className="mb-2">Hostel Preferences</FormLabel>
                     <FormDescription>
@@ -451,9 +585,9 @@ const ApplicationForm = () => {
                     )}
                   />
                   
-                  <Button type="submit" disabled={submitting}>
+                  <Button type="submit" disabled={submitting || !photoIdFile || !paymentSlipFile}>
                     {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Submit Application
+                    {uploading ? "Uploading Documents..." : "Submit Application"}
                   </Button>
                 </form>
               </Form>

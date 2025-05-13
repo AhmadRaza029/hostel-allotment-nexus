@@ -1,30 +1,33 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Application, Student, Hostel, Allocation, JsonValue } from '@/types';
-import { AlertCircle, AlertTriangle, CalendarIcon, Check, CheckCircle, FileText, Home, Loader2, MapPin, School, User, XCircle } from 'lucide-react';
+import { Application, Student } from '@/types';
 import { format } from 'date-fns';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, ArrowLeft, CheckCircle, Loader2, User, XCircle } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import DocumentViewer from '@/components/DocumentViewer';
+
+interface AdminApplicationDetailProps {}
 
 const AdminApplicationDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [application, setApplication] = useState<Application | null>(null);
   const [student, setStudent] = useState<Student | null>(null);
-  const [allocation, setAllocation] = useState<Allocation | null>(null);
-  const [hostels, setHostels] = useState<Hostel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingAction, setProcessingAction] = useState(false);
   const [remarks, setRemarks] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,11 +42,8 @@ const AdminApplicationDetail = () => {
           .single();
 
         if (appError) throw appError;
-        setApplication({
-          ...appData,
-          status: appData.status as "PENDING" | "APPROVED" | "REJECTED"
-        });
-        setRemarks(appData.remarks || '');
+        
+        setApplication(appData);
 
         // Fetch student details
         const { data: studentData, error: studentError } = await supabase
@@ -53,133 +53,99 @@ const AdminApplicationDetail = () => {
           .single();
 
         if (studentError) throw studentError;
+        
         setStudent(studentData);
-
-        // Fetch allocation if exists
-        if (appData.status === 'APPROVED') {
-          const { data: allocData, error: allocError } = await supabase
-            .from('allocations')
-            .select('*')
-            .eq('application_id', id)
-            .single();
-
-          if (!allocError && allocData) {
-            setAllocation({
-              ...allocData,
-              payment_status: allocData.payment_status as "PENDING" | "COMPLETED" | "FAILED"
-            });
-          }
-        }
-
-        // Fetch all hostels
-        const { data: hostelData, error: hostelError } = await supabase
-          .from('hostels')
-          .select('*');
-
-        if (hostelError) throw hostelError;
-        setHostels(hostelData || []);
+        setRemarks(appData.remarks || '');
 
       } catch (error) {
-        console.error('Error fetching application details:', error);
+        console.error('Error fetching details:', error);
         toast.error('Failed to load application details');
-        navigate('/admin');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id, navigate]);
+  }, [id]);
 
-  const handleStatusUpdate = async (status: "PENDING" | "APPROVED" | "REJECTED") => {
+  const handleAction = async (status: 'APPROVED' | 'REJECTED') => {
     if (!application) return;
-
-    setIsSubmitting(true);
+    
+    setProcessingAction(true);
     try {
-      const updateData = { 
-        status, 
-        remarks: remarks || null,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await supabase
+      let roomNumber = '';
+      let hostelId = '';
+      let paymentAmount = 0;
+      
+      if (status === 'APPROVED') {
+        // Get preferred hostel
+        const preferredHostelId = application.hostel_preference?.[0];
+        
+        if (!preferredHostelId) {
+          toast.error('No hostel preference found in application');
+          return;
+        }
+        
+        // Get a random room number for this demo
+        roomNumber = `${Math.floor(Math.random() * 500) + 100}`;
+        hostelId = preferredHostelId;
+        
+        // Get fee amount from settings
+        const { data: feeData, error: feeError } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'hostel_fees')
+          .single();
+          
+        if (feeError) throw feeError;
+        
+        const fees = feeData.value as { general: number, reserved: number };
+        paymentAmount = application.category === 'GENERAL' ? fees.general : fees.reserved;
+      }
+      
+      // Update application status
+      const { error: updateError } = await supabase
         .from('applications')
-        .update(updateData)
+        .update({ 
+          status: status,
+          remarks: remarks,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', application.id);
-
-      if (error) throw error;
-
+        
+      if (updateError) throw updateError;
+      
+      // If approved, create allocation
+      if (status === 'APPROVED') {
+        const { error: allocationError } = await supabase
+          .from('allocations')
+          .insert({
+            application_id: application.id,
+            hostel_id: hostelId,
+            room_number: roomNumber,
+            payment_status: 'PENDING',
+            payment_amount: paymentAmount,
+            allotment_date: new Date().toISOString()
+          });
+          
+        if (allocationError) throw allocationError;
+      }
+      
+      toast.success(`Application ${status.toLowerCase()} successfully`);
+      
       // Update local state
       setApplication({
         ...application,
-        ...updateData
+        status: status,
+        remarks: remarks
       });
-
-      toast.success(`Application ${status.toLowerCase()}`);
       
-      // If approved, show option to allocate room
-      if (status === 'APPROVED' && !allocation) {
-        toast.info('You can now allocate a room for this student');
-      }
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Failed to update application status');
+      console.error('Error processing application:', error);
+      toast.error(`Failed to ${status.toLowerCase()} application`);
     } finally {
-      setIsSubmitting(false);
+      setProcessingAction(false);
     }
-  };
-
-  const handleAllocateRoom = async (hostelId: string) => {
-    if (!application) return;
-
-    setIsSubmitting(true);
-    try {
-      // Generate a room number (in a real app, this would be more sophisticated)
-      const roomNumber = `${Math.floor(Math.random() * 500) + 100}`;
-      
-      // Get fee amount from settings
-      const { data: feeData } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'hostel_fees')
-        .single();
-        
-      const feeValue = feeData.value as JsonValue;
-      const feeAmount = application.category === 'GENERAL' ? 
-        (feeValue as {general: number, reserved: number}).general : 
-        (feeValue as {general: number, reserved: number}).reserved;
-
-      // Create allocation
-      const { data, error } = await supabase
-        .from('allocations')
-        .insert({
-          application_id: application.id,
-          hostel_id: hostelId,
-          room_number: roomNumber,
-          payment_status: 'PENDING',
-          payment_amount: feeAmount
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setAllocation({
-        ...data,
-        payment_status: data.payment_status as "PENDING" | "COMPLETED" | "FAILED"
-      });
-      toast.success('Room allocated successfully');
-    } catch (error) {
-      console.error('Error allocating room:', error);
-      toast.error('Failed to allocate room');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getHostelNameById = (hostelId: string) => {
-    const hostel = hostels.find(h => h.id === hostelId);
-    return hostel ? hostel.name : 'Unknown';
   };
 
   const getStatusBadge = (status: string) => {
@@ -211,17 +177,17 @@ const AdminApplicationDetail = () => {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              Application details not found or could not be loaded.
-            </AlertDescription>
-          </Alert>
-          <div className="mt-4">
-            <Button onClick={() => navigate('/admin')}>
-              Return to Dashboard
-            </Button>
+          <Button variant="ghost" onClick={() => navigate('/admin')} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
+          </Button>
+          <div className="flex items-center justify-center h-48">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-2" />
+              <h2 className="text-2xl font-bold mb-2">Application Not Found</h2>
+              <p className="text-muted-foreground">
+                The requested application could not be found or has been deleted.
+              </p>
+            </div>
           </div>
         </div>
         <Footer />
@@ -234,315 +200,273 @@ const AdminApplicationDetail = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 py-8 flex-1">
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Application Details</h1>
-            <p className="text-muted-foreground">
-              Submitted on {format(new Date(application.created_at), 'MMMM dd, yyyy')}
-            </p>
-          </div>
-          <Button variant="outline" onClick={() => navigate('/admin')}>
-            Back to Dashboard
-          </Button>
-        </div>
+        <Button variant="ghost" onClick={() => navigate('/admin')} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
+        </Button>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
-                <CardTitle>Application #{application.id.substring(0, 8)}</CardTitle>
-                {getStatusBadge(application.status)}
-              </div>
-              <CardDescription>
-                Academic Year: {application.academic_year}, Current Year: {application.current_year}
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-6">
-              {/* Home Address & Distance */}
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Home Address</h3>
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
                   <div>
-                    <p>{application.home_address}</p>
-                    {application.distance_km && (
-                      <p className="text-sm text-muted-foreground">
-                        Distance from campus: {application.distance_km} km
-                      </p>
-                    )}
+                    <CardTitle className="text-xl">Application #{application.id.slice(-8)}</CardTitle>
+                    <CardDescription>
+                      Submitted on {format(new Date(application.created_at), 'MMM dd, yyyy')}
+                    </CardDescription>
                   </div>
+                  {getStatusBadge(application.status)}
                 </div>
-              </div>
+              </CardHeader>
               
-              <Separator />
-              
-              {/* Academic Details */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <h3 className="text-sm font-semibold mb-1">Current Year</h3>
-                  <p>{application.current_year}</p>
-                </div>
-                {application.cgpa && (
+              <CardContent>
+                <div className="space-y-6">
                   <div>
-                    <h3 className="text-sm font-semibold mb-1">CGPA</h3>
-                    <p>{application.cgpa}</p>
+                    <h3 className="text-lg font-medium">Student Information</h3>
+                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Name</p>
+                        <p className="font-medium">{student.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Student ID</p>
+                        <p className="font-medium">{student.id}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Department</p>
+                        <p className="font-medium">{student.department}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Current Year</p>
+                        <p className="font-medium">{application.current_year}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Email</p>
+                        <p className="font-medium">{student.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Phone</p>
+                        <p className="font-medium">{student.phone || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Gender</p>
+                        <p className="font-medium">{student.gender}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Category</p>
+                        <p className="font-medium">{application.category || 'Not specified'}</p>
+                      </div>
+                    </div>
                   </div>
-                )}
-                <div>
-                  <h3 className="text-sm font-semibold mb-1">Category</h3>
-                  <p>{application.category || 'Not specified'}</p>
-                </div>
-                {application.annual_income && (
-                  <div>
-                    <h3 className="text-sm font-semibold mb-1">Annual Income</h3>
-                    <p>₹{application.annual_income.toLocaleString()}</p>
-                  </div>
-                )}
-              </div>
-              
-              <Separator />
-              
-              {/* Hostel Preferences */}
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Hostel Preferences</h3>
-                {application.hostel_preference && application.hostel_preference.length > 0 ? (
-                  <ol className="list-decimal list-inside space-y-1">
-                    {application.hostel_preference.map((hostelId, index) => (
-                      <li key={index}>{getHostelNameById(hostelId)}</li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className="text-muted-foreground">No preferences specified</p>
-                )}
-              </div>
-              
-              <Separator />
-              
-              {/* Supporting Documents */}
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Documents</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button variant="outline" className="justify-start" disabled={!application.photo_id_url}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    {application.photo_id_url ? 'View Photo ID' : 'No Photo ID Uploaded'}
-                  </Button>
-                  <Button variant="outline" className="justify-start" disabled={!application.income_cert_url}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    {application.income_cert_url ? 'View Income Certificate' : 'No Income Certificate Uploaded'}
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Allocation Information */}
-              {allocation && (
-                <>
+                  
                   <Separator />
                   
                   <div>
-                    <h3 className="text-sm font-semibold mb-2">Room Allocation</h3>
-                    <Card className="bg-green-50 border-green-200">
-                      <CardContent className="pt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <h4 className="text-xs text-muted-foreground">Hostel</h4>
-                            <p>{getHostelNameById(allocation.hostel_id)}</p>
-                          </div>
-                          <div>
-                            <h4 className="text-xs text-muted-foreground">Room Number</h4>
-                            <p>{allocation.room_number}</p>
-                          </div>
-                          <div>
-                            <h4 className="text-xs text-muted-foreground">Payment Status</h4>
-                            <Badge className={allocation.payment_status === 'COMPLETED' ? 
-                              'bg-green-600' : 'bg-yellow-600'}>
-                              {allocation.payment_status}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="mt-2">
-                          <h4 className="text-xs text-muted-foreground">Allocated On</h4>
-                          <p>{format(new Date(allocation.allotment_date), 'MMMM dd, yyyy')}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <h3 className="text-lg font-medium">Application Details</h3>
+                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Academic Year</p>
+                        <p className="font-medium">{application.academic_year}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">CGPA</p>
+                        <p className="font-medium">{application.cgpa || 'Not provided'}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-sm text-muted-foreground">Home Address</p>
+                        <p className="font-medium">{application.home_address}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Distance from Campus</p>
+                        <p className="font-medium">
+                          {application.distance_km ? `${application.distance_km} KM` : 'Not provided'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Annual Family Income</p>
+                        <p className="font-medium">
+                          {application.annual_income ? `₹${application.annual_income.toLocaleString()}` : 'Not provided'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </>
-              )}
-              
-              {/* Remarks */}
-              <Separator />
-              
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Admin Remarks</h3>
-                <Textarea 
-                  placeholder="Enter notes or reasons for approval/rejection" 
-                  value={remarks} 
-                  onChange={(e) => setRemarks(e.target.value)}
-                  className="min-h-[100px]"
-                  disabled={application.status !== 'PENDING' && !['ADMIN', 'SUPERADMIN'].includes(application.status)}
-                />
-              </div>
-            </CardContent>
-            
-            {application.status === 'PENDING' && (
-              <CardFooter className="flex justify-end gap-4">
-                <Button 
-                  variant="outline" 
-                  className="border-red-500 hover:bg-red-500 hover:text-white"
-                  onClick={() => handleStatusUpdate('REJECTED')}
-                  disabled={isSubmitting}
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject
-                </Button>
-                <Button 
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => handleStatusUpdate('APPROVED')}
-                  disabled={isSubmitting}
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approve
-                </Button>
-              </CardFooter>
-            )}
-            
-            {application.status === 'APPROVED' && !allocation && (
-              <CardFooter>
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Room allocation needed</AlertTitle>
-                  <AlertDescription>
-                    This application has been approved but no room has been allocated yet.
-                    Please allocate a room from the student's preferences.
-                  </AlertDescription>
-                </Alert>
-              </CardFooter>
-            )}
-          </Card>
-          
-          <div className="space-y-6">
-            {/* Student Info Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Student Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="h-12 w-12 rounded-full bg-hostel-light flex items-center justify-center">
-                    <User className="h-6 w-6 text-hostel-primary" />
-                  </div>
+                  
+                  <Separator />
+                  
                   <div>
-                    <h3 className="font-semibold">{student.name}</h3>
-                    <p className="text-sm text-muted-foreground">{student.email}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{student.phone || 'No phone number'}</p>
+                    <h3 className="text-lg font-medium mb-4">Documents</h3>
+                    <div className="space-y-4">
+                      <DocumentViewer 
+                        filePath={application.photo_id_url} 
+                        label="Photo ID / Residence Certificate" 
+                        docType="photo_id" 
+                      />
+                      
+                      <DocumentViewer 
+                        filePath={application.income_cert_url} 
+                        label="Income Certificate" 
+                        docType="income_cert" 
+                      />
+                      
+                      <DocumentViewer 
+                        filePath={application.payment_slip_url} 
+                        label="University Payment Receipt" 
+                        docType="payment_slip" 
+                      />
+                    </div>
                   </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="grid grid-cols-2 gap-2">
+                  
+                  <Separator />
+                  
                   <div>
-                    <h4 className="text-xs text-muted-foreground">Gender</h4>
-                    <p>{student.gender}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-xs text-muted-foreground">Department</h4>
-                    <p>{student.department}</p>
+                    <h3 className="text-lg font-medium">Hostel Preferences</h3>
+                    <div className="mt-2">
+                      {application.hostel_preference && application.hostel_preference.length > 0 ? (
+                        <ul className="list-disc pl-5 space-y-1">
+                          {application.hostel_preference.map((hostelId, index) => (
+                            <li key={hostelId}>
+                              <p className="font-medium">Preference {index + 1}: {hostelId}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-muted-foreground">No hostel preferences specified</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Room Allocation Card (if not yet allocated) */}
-            {application.status === 'APPROVED' && !allocation && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Allocate Room</CardTitle>
-                  <CardDescription>
-                    Select a hostel from student's preferences
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {application.hostel_preference?.map((hostelId) => {
-                    const hostel = hostels.find(h => h.id === hostelId);
-                    if (!hostel) return null;
-                    
-                    return (
-                      <Button 
-                        key={hostelId}
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => handleAllocateRoom(hostelId)}
-                        disabled={isSubmitting}
-                      >
-                        <Home className="h-4 w-4 mr-2" />
-                        {hostel.name}
-                        <span className="ml-auto text-xs">
-                          {hostel.available_rooms} rooms
-                        </span>
-                      </Button>
-                    );
-                  })}
-                  
-                  {(!application.hostel_preference || application.hostel_preference.length === 0) && (
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>No hostel preferences</AlertTitle>
-                      <AlertDescription>
-                        Student did not specify any hostel preferences.
-                      </AlertDescription>
-                    </Alert>
+          </div>
+          
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Application Status</CardTitle>
+                <CardDescription>
+                  Review and process this application
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="space-y-4">
+                  {application.status === 'PENDING' ? (
+                    <>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1">
+                          Remarks / Comments
+                        </label>
+                        <Textarea
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                          placeholder="Add any notes or reasons for approval/rejection"
+                          className="w-full"
+                          rows={4}
+                        />
+                      </div>
+                      
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          onClick={() => handleAction('APPROVED')}
+                          disabled={processingAction}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {processingAction ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                          )}
+                          Approve Application
+                        </Button>
+                        
+                        <Button
+                          onClick={() => handleAction('REJECTED')}
+                          disabled={processingAction}
+                          variant="destructive"
+                        >
+                          {processingAction ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <XCircle className="mr-2 h-4 w-4" />
+                          )}
+                          Reject Application
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center mb-4">
+                        <div 
+                          className={`h-12 w-12 rounded-full flex items-center justify-center mr-4
+                            ${application.status === 'APPROVED' ? 'bg-green-100' : 'bg-red-100'}`}
+                        >
+                          {application.status === 'APPROVED' ? (
+                            <CheckCircle className="h-6 w-6 text-green-600" />
+                          ) : (
+                            <XCircle className="h-6 w-6 text-red-600" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold">
+                            Application {application.status.toLowerCase()}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(new Date(application.updated_at), 'MMM dd, yyyy')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {application.remarks && (
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Remarks / Comments
+                          </label>
+                          <div className="p-3 bg-gray-50 rounded-md text-sm">
+                            {application.remarks}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {application.status === 'APPROVED' && (
+                        <Button
+                          onClick={() => navigate(`/admin/allocation/${application.id}`)}
+                          className="w-full mt-2"
+                        >
+                          View Allocation Details
+                        </Button>
+                      )}
+                    </>
                   )}
-                </CardContent>
-              </Card>
-            )}
+                </div>
+              </CardContent>
+            </Card>
             
-            {/* Application Priority Score */}
-            {application.status === 'PENDING' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Priority Assessment</CardTitle>
-                  <CardDescription>
-                    Calculated based on distance, income and CGPA
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Distance Factor</span>
-                    <span className="font-medium">
-                      {application.distance_km ? 
-                        (Math.min(application.distance_km, 1000) / 1000 * 10).toFixed(2) : 'N/A'}
-                    </span>
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Contact</CardTitle>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="flex items-center mb-4">
+                  <div className="h-10 w-10 rounded-full bg-hostel-primary/10 flex items-center justify-center mr-3">
+                    <User className="h-5 w-5 text-hostel-primary" />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Economic Factor</span>
-                    <span className="font-medium">
-                      {application.annual_income ? 
-                        (10 - Math.min(application.annual_income, 1000000) / 1000000 * 10).toFixed(2) : 'N/A'}
-                    </span>
+                  <div>
+                    <p className="font-medium">{student.name}</p>
+                    <p className="text-sm text-muted-foreground">{student.department}</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Academic Factor</span>
-                    <span className="font-medium">
-                      {application.cgpa ? application.cgpa : 'N/A'}
-                    </span>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">Overall Score</span>
-                    <span className="font-semibold text-lg">
-                      {/* This is a simplified calculation - in a real app this would use the actual formula */}
-                      {(
-                        (application.distance_km ? Math.min(application.distance_km, 1000) / 1000 * 4 : 0) +
-                        (application.annual_income ? (10 - Math.min(application.annual_income, 1000000) / 1000000 * 10) * 0.6 : 0) +
-                        (application.cgpa ? application.cgpa / 10 : 0)
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    <span className="font-medium">Email:</span> {student.email}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">Phone:</span> {student.phone || 'Not provided'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>

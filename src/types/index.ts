@@ -22,6 +22,7 @@ export type Application = {
   category?: string;
   photo_id_url?: string;
   income_cert_url?: string;
+  payment_slip_url?: string; // Added payment slip URL
   hostel_preference?: string[];
   status: "PENDING" | "APPROVED" | "REJECTED";
   remarks?: string;
