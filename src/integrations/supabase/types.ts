@@ -73,6 +73,7 @@ export type Database = {
           hostel_preference: string[] | null
           id: string
           income_cert_url: string | null
+          payment_slip_url: string | null
           photo_id_url: string | null
           remarks: string | null
           status: string
@@ -91,6 +92,7 @@ export type Database = {
           hostel_preference?: string[] | null
           id?: string
           income_cert_url?: string | null
+          payment_slip_url?: string | null
           photo_id_url?: string | null
           remarks?: string | null
           status?: string
@@ -109,6 +111,7 @@ export type Database = {
           hostel_preference?: string[] | null
           id?: string
           income_cert_url?: string | null
+          payment_slip_url?: string | null
           photo_id_url?: string | null
           remarks?: string | null
           status?: string

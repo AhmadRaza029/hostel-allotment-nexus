@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
@@ -43,7 +42,10 @@ const AdminApplicationDetail = () => {
 
         if (appError) throw appError;
         
-        setApplication(appData);
+        setApplication({
+          ...appData,
+          status: appData.status as "PENDING" | "APPROVED" | "REJECTED"
+        });
 
         // Fetch student details
         const { data: studentData, error: studentError } = await supabase
