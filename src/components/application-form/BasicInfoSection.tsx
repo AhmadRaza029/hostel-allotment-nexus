@@ -1,30 +1,13 @@
-
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { UseFormReturn } from 'react-hook-form';
-import { z } from 'zod';
-
-const formSchema = z.object({
-  academicYear: z.string().min(4, "Please select an academic year"),
-  currentYear: z.string().min(1, "Please select your current year"),
-  cgpa: z.string().optional(),
-  homeAddress: z.string().min(5, "Please enter your complete home address"),
-  distanceKm: z.string().optional(),
-  annualIncome: z.string().optional(),
-  category: z.string().optional(),
-  hostelPreferences: z.array(z.string()).optional(),
-  confirmRules: z.literal(true, {
-    errorMap: () => ({ message: "You must agree to the hostel rules" }),
-  }),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { ApplicationFormValues } from './ApplicationFormSchema';
 
 interface BasicInfoSectionProps {
-  form: UseFormReturn<FormValues>;
+  form: UseFormReturn<ApplicationFormValues>;
 }
 
 const BasicInfoSection = ({ form }: BasicInfoSectionProps) => {
