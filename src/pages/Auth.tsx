@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
+import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -33,8 +35,26 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Extract tab from location state or query params
+  const getInitialTab = () => {
+    if (location.state?.tab) return location.state.tab;
+    if (new URLSearchParams(location.search).get('tab') === 'reset-password') return 'reset-password';
+    return 'login';
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab());
+
+  useEffect(() => {
+    const tab = new URLSearchParams(location.search).get('tab');
+    if (tab === 'reset-password') {
+      setActiveTab('reset-password');
+    }
+  }, [location]);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -86,193 +106,220 @@ const Auth = () => {
       
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="max-w-md mx-auto">
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Login</CardTitle>
-                  <CardDescription>
-                    Enter your credentials to access your account
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                      <FormField
-                        control={loginForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your email address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Your password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? "Logging in..." : "Login"}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Register</CardTitle>
-                  <CardDescription>
-                    Create a new account to apply for hostel
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                      <FormField
-                        control={registerForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your full name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your email address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Create a password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your phone number (optional)" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="gender"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Gender</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+          {activeTab === 'reset-password' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Reset Password</CardTitle>
+                <CardDescription>
+                  Create a new password for your account
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResetPasswordForm />
+              </CardContent>
+            </Card>
+          ) : (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Register</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Login</CardTitle>
+                    <CardDescription>
+                      Enter your credentials to access your account
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    {showForgotPassword ? (
+                      <ForgotPasswordForm onCancel={() => setShowForgotPassword(false)} />
+                    ) : (
+                      <Form {...loginForm}>
+                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                          <FormField
+                            control={loginForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Your email address" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={loginForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Password</FormLabel>
+                                <FormControl>
+                                  <Input type="password" placeholder="Your password" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <Button 
+                            type="button" 
+                            variant="link" 
+                            className="p-0 h-auto text-sm"
+                            onClick={() => setShowForgotPassword(true)}
+                          >
+                            Forgot your password?
+                          </Button>
+                          
+                          <Button type="submit" className="w-full" disabled={isLoading}>
+                            {isLoading ? "Logging in..." : "Login"}
+                          </Button>
+                        </form>
+                      </Form>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="register">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Register</CardTitle>
+                    <CardDescription>
+                      Create a new account to apply for hostel
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <Form {...registerForm}>
+                      <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Full Name</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select gender" />
-                                </SelectTrigger>
+                                <Input placeholder="Your full name" {...field} />
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="MALE">Male</SelectItem>
-                                <SelectItem value="FEMALE">Female</SelectItem>
-                                <SelectItem value="OTHER">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="department"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Department</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select department" />
-                                </SelectTrigger>
+                                <Input placeholder="Your email address" {...field} />
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Computer Science">Computer Science</SelectItem>
-                                <SelectItem value="Electrical Engineering">Electrical Engineering</SelectItem>
-                                <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
-                                <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
-                                <SelectItem value="Electronics & Communication">Electronics & Communication</SelectItem>
-                                <SelectItem value="Information Technology">Information Technology</SelectItem>
-                                <SelectItem value="Chemical Engineering">Chemical Engineering</SelectItem>
-                                <SelectItem value="Biotechnology">Biotechnology</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? "Creating account..." : "Register"}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-                
-                <CardFooter className="text-center text-sm text-muted-foreground">
-                  By registering, you agree to the terms and conditions
-                </CardFooter>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Password</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="Create a password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Your phone number (optional)" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="gender"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Gender</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="MALE">Male</SelectItem>
+                                  <SelectItem value="FEMALE">Female</SelectItem>
+                                  <SelectItem value="OTHER">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="department"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Department</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select department" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="Computer Science">Computer Science</SelectItem>
+                                  <SelectItem value="Electrical Engineering">Electrical Engineering</SelectItem>
+                                  <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
+                                  <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
+                                  <SelectItem value="Electronics & Communication">Electronics & Communication</SelectItem>
+                                  <SelectItem value="Information Technology">Information Technology</SelectItem>
+                                  <SelectItem value="Chemical Engineering">Chemical Engineering</SelectItem>
+                                  <SelectItem value="Biotechnology">Biotechnology</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                          {isLoading ? "Creating account..." : "Register"}
+                        </Button>
+                      </form>
+                    </Form>
+                  </CardContent>
+                  
+                  <CardFooter className="text-center text-sm text-muted-foreground">
+                    By registering, you agree to the terms and conditions
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </main>
       
