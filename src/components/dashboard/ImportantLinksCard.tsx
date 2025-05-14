@@ -1,10 +1,9 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { BookOpen, FileText, Home } from 'lucide-react';
 import { Application, Allocation } from '@/types';
+import { ChevronRight, FileText, CreditCard } from 'lucide-react';
 
 interface ImportantLinksCardProps {
   application: Application | null;
@@ -12,44 +11,62 @@ interface ImportantLinksCardProps {
   applicationPeriodActive: boolean;
 }
 
-const ImportantLinksCard = ({ 
-  application,
-  allocation,
-  applicationPeriodActive
-}: ImportantLinksCardProps) => {
+const ImportantLinksCard = ({ application, allocation, applicationPeriodActive }: ImportantLinksCardProps) => {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Important Links</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">Important Links</CardTitle>
       </CardHeader>
-      
-      <CardContent>
-        <div className="space-y-2">
-          <Button variant="outline" className="w-full justify-start" asChild>
-            <Link to="/rules">
-              <BookOpen className="mr-2 h-4 w-4" />
-              Hostel Rules & Guidelines
-            </Link>
-          </Button>
-          
-          {!application && applicationPeriodActive && (
-            <Button className="w-full justify-start" asChild>
-              <Link to="/apply">
-                <FileText className="mr-2 h-4 w-4" />
-                Apply for Hostel
-              </Link>
-            </Button>
-          )}
-          
-          {allocation && (
-            <Button className="w-full justify-start" asChild>
-              <Link to="/allocation">
-                <Home className="mr-2 h-4 w-4" />
-                View Allocation Details
-              </Link>
-            </Button>
-          )}
-        </div>
+      <CardContent className="grid gap-1">
+        {!application && applicationPeriodActive && (
+          <Link 
+            to="/apply" 
+            className="flex items-center justify-between py-2 px-1 hover:bg-muted rounded-md transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <FileText className="h-4 w-4 text-primary" />
+              <span className="text-sm">Apply for Hostel</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        )}
+        
+        {application?.status === 'APPROVED' && (
+          <Link 
+            to="/allocation" 
+            className="flex items-center justify-between py-2 px-1 hover:bg-muted rounded-md transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <FileText className="h-4 w-4 text-primary" />
+              <span className="text-sm">Allocation Details</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        )}
+        
+        {application?.status === 'APPROVED' && allocation && allocation.payment_status === 'PENDING' && (
+          <Link 
+            to="/payment" 
+            className="flex items-center justify-between py-2 px-1 hover:bg-muted rounded-md transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <CreditCard className="h-4 w-4 text-primary" />
+              <span className="text-sm">Make Payment</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        )}
+        
+        <Link 
+          to="/rules" 
+          className="flex items-center justify-between py-2 px-1 hover:bg-muted rounded-md transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <FileText className="h-4 w-4 text-primary" />
+            <span className="text-sm">Hostel Rules</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
       </CardContent>
     </Card>
   );
