@@ -1,1 +1,13 @@
+
 project_id = "dtoocgevxdzzovvdsusr"
+
+[realtime]
+enabled = true
+
+[[realtime.tables]]
+name = "applications"
+schema = "public"
+
+[[realtime.tables]]
+name = "allocations" 
+schema = "public"
