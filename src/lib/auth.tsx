@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/toaster';
+import { toast } from '@/hooks/use-toast';
 
 type AuthContextType = {
   user: User | null;
@@ -159,7 +159,11 @@ export function RequireAuth({ children, admin = false }: { children: React.React
     
     if (!isLoading && admin && !isAdmin) {
       navigate('/dashboard');
-      toast.error("You don't have permission to access this area");
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this area",
+        variant: "destructive"
+      });
     }
   }, [user, isLoading, isAdmin, admin, navigate]);
 
