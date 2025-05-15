@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toaster';
 import { Mail } from 'lucide-react';
 
 const forgotPasswordSchema = z.object({
@@ -37,10 +36,17 @@ const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
         throw error;
       }
       
-      toast.success("Password reset link sent to your email");
+      toast({
+        title: "Success",
+        description: "Password reset link sent to your email",
+      });
       form.reset();
     } catch (error: any) {
-      toast.error(error.message || "Failed to send reset password link");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset password link",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

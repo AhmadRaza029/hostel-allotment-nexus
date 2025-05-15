@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toaster';
 
 type AuthContextType = {
   user: User | null;
@@ -76,9 +75,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
-      toast.success("Registration successful! Please check your email for verification.");
+      toast({
+        title: "Registration successful!",
+        description: "Please check your email for verification.",
+      });
     } catch (error: any) {
-      toast.error(error.message || "An error occurred during sign up");
+      toast({
+        title: "Registration failed",
+        description: error.message || "An error occurred during sign up",
+        variant: "destructive",
+      });
       throw error;
     }
   };
@@ -94,10 +100,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
-      toast.success("Login successful!");
+      toast({
+        title: "Login successful!",
+      });
       navigate(isAdmin ? '/admin' : '/dashboard');
     } catch (error: any) {
-      toast.error(error.message || "An error occurred during sign in");
+      toast({
+        title: "Login failed",
+        description: error.message || "An error occurred during sign in",
+        variant: "destructive",
+      });
       throw error;
     }
   };
@@ -108,10 +120,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         throw error;
       }
-      toast.success("Successfully signed out");
+      toast({
+        title: "Successfully signed out",
+      });
       navigate('/');
     } catch (error: any) {
-      toast.error(error.message || "An error occurred during sign out");
+      toast({
+        title: "Sign out failed",
+        description: error.message || "An error occurred during sign out",
+        variant: "destructive",
+      });
     }
   };
 

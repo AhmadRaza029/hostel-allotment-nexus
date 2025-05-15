@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toaster';
 import { Key } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,11 +43,18 @@ const ResetPasswordForm = () => {
         throw error;
       }
       
-      toast.success("Password has been reset successfully");
+      toast({
+        title: "Success",
+        description: "Password has been reset successfully",
+      });
       form.reset();
       navigate('/auth', { state: { tab: 'login' } });
     } catch (error: any) {
-      toast.error(error.message || "Failed to reset password");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset password",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
