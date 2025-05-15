@@ -36,6 +36,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [loginType, setLoginType] = useState<'student' | 'admin'>('student');
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -138,50 +139,61 @@ const Auth = () => {
                     {showForgotPassword ? (
                       <ForgotPasswordForm onCancel={() => setShowForgotPassword(false)} />
                     ) : (
-                      <Form {...loginForm}>
-                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                          <FormField
-                            control={loginForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Your email address" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={loginForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <FormControl>
-                                  <Input type="password" placeholder="Your password" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <Button 
-                            type="button" 
-                            variant="link" 
-                            className="p-0 h-auto text-sm"
-                            onClick={() => setShowForgotPassword(true)}
-                          >
-                            Forgot your password?
-                          </Button>
-                          
-                          <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? "Logging in..." : "Login"}
-                          </Button>
-                        </form>
-                      </Form>
+                      <>
+                        <div className="mb-6">
+                          <Tabs value={loginType} onValueChange={(value) => setLoginType(value as 'student' | 'admin')} className="w-full">
+                            <TabsList className="grid grid-cols-2 w-full">
+                              <TabsTrigger value="student">Student</TabsTrigger>
+                              <TabsTrigger value="admin">Administrator</TabsTrigger>
+                            </TabsList>
+                          </Tabs>
+                        </div>
+
+                        <Form {...loginForm}>
+                          <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                            <FormField
+                              control={loginForm.control}
+                              name="email"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Email</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Your email address" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={loginForm.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Password</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" placeholder="Your password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <Button 
+                              type="button" 
+                              variant="link" 
+                              className="p-0 h-auto text-sm"
+                              onClick={() => setShowForgotPassword(true)}
+                            >
+                              Forgot your password?
+                            </Button>
+                            
+                            <Button type="submit" className="w-full" disabled={isLoading}>
+                              {isLoading ? "Logging in..." : `Login as ${loginType === 'admin' ? 'Administrator' : 'Student'}`}
+                            </Button>
+                          </form>
+                        </Form>
+                      </>
                     )}
                   </CardContent>
                 </Card>
