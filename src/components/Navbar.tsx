@@ -20,7 +20,7 @@ const Navbar = () => {
     <header className="w-full border-b bg-white">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <div className="flex items-center">
-          <Link to="/" className="text-xl font-bold text-hostel-primary">
+          <Link to="/home" className="text-xl font-bold text-hostel-primary">
             Hostel Allotment System
           </Link>
         </div>
@@ -30,6 +30,11 @@ const Navbar = () => {
             <li>
               <Link to="/rules" className="text-sm font-medium hover:text-hostel-primary">
                 Rules
+              </Link>
+            </li>
+            <li>
+              <Link to="/home" className="text-sm font-medium hover:text-hostel-primary">
+                About
               </Link>
             </li>
             
@@ -77,11 +82,18 @@ const Navbar = () => {
                 </li>
               </>
             ) : (
-              <li>
-                <Button asChild size="sm">
-                  <Link to="/auth">Login</Link>
-                </Button>
-              </li>
+              <>
+                <li>
+                  <Button asChild variant="outline" size="sm" className="mr-2">
+                    <Link to="/">Student Login</Link>
+                  </Button>
+                </li>
+                <li>
+                  <Button asChild size="sm" className="bg-orange-500 hover:bg-orange-600">
+                    <Link to="/admin-login">Admin Login</Link>
+                  </Button>
+                </li>
+              </>
             )}
           </ul>
         </nav>

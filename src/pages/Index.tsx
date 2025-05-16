@@ -12,11 +12,6 @@ import { useAuth } from '@/lib/auth';
 const Index = () => {
   const { user, isAdmin } = useAuth();
 
-  const handleLoginClick = (type: 'student' | 'admin') => {
-    console.log(`${type} login clicked`);
-    // Navigation is handled by the Link component
-  };
-
   const infoCards = [
     {
       title: "Hostel Rules",
@@ -78,20 +73,18 @@ const Index = () => {
                   <Button 
                     size="lg" 
                     className="bg-hostel-primary hover:bg-hostel-primary/90 text-white"
-                    onClick={() => handleLoginClick('student')}
                     asChild
                   >
-                    <Link to="/auth">
+                    <Link to="/">
                       Student Login <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button 
                     size="lg" 
                     className="bg-orange-500 hover:bg-orange-600 text-white"
-                    onClick={() => handleLoginClick('admin')}
                     asChild
                   >
-                    <Link to="/auth">
+                    <Link to="/admin-login">
                       Admin Login <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
