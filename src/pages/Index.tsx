@@ -1,178 +1,156 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import Navbar from '@/components/Navbar';
-import InfoCard from '@/components/InfoCard';
-import Footer from '@/components/Footer';
-import { Book, Home, Bed, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/lib/auth';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { ArrowRight, Building, CheckCircle, Clock, User } from 'lucide-react';
 
 const Index = () => {
-  const { user, isAdmin } = useAuth();
-
-  const infoCards = [
-    {
-      title: "Hostel Rules",
-      icon: Book,
-      onClick: () => {}
-    },
-    {
-      title: "Accommodation Details",
-      icon: Bed,
-      onClick: () => {}
-    },
-    {
-      title: "Facilities",
-      icon: Home,
-      onClick: () => {}
-    },
-    {
-      title: "Anti-Ragging",
-      icon: Book,
-      onClick: () => {}
-    },
-    {
-      title: "Authorities",
-      icon: Book,
-      onClick: () => {}
-    }
-  ];
-
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="relative bg-hostel-hero bg-cover bg-center h-screen pt-16 flex items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-hostel-dark/70 to-hostel-dark/90"></div>
-        
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <div className="max-w-3xl mx-auto bg-white/90 backdrop-blur-sm p-8 rounded-xl shadow-xl animate-fade-in">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-hostel-primary">
-              Hostel Allotment System
-            </h1>
-            <h2 className="text-xl md:text-2xl mb-8 text-hostel-secondary">
-              Maulana Abul Kalam Azad University of Technology
-            </h2>
-            
-            <div className="flex flex-col md:flex-row gap-4 justify-center mb-8">
-              {user ? (
-                <Button 
-                  size="lg" 
-                  className="bg-hostel-primary hover:bg-hostel-primary/90 text-white"
-                  asChild
-                >
-                  <Link to={isAdmin ? "/admin" : "/dashboard"}>
-                    Go to {isAdmin ? "Admin Dashboard" : "Student Dashboard"} <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              ) : (
-                <>
-                  <Button 
-                    size="lg" 
-                    className="bg-hostel-primary hover:bg-hostel-primary/90 text-white"
-                    asChild
-                  >
-                    <Link to="/">
-                      Student Login <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-b from-orange-50 to-white py-16 px-4">
+          <div className="container mx-auto max-w-5xl">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="md:w-1/2 space-y-6">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                  Hostel Allotment System
+                </h1>
+                <p className="text-lg text-gray-700">
+                  A comprehensive platform for students to apply for hostel accommodation 
+                  and for administrators to manage room allocations efficiently.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600">
+                    <Link to="/register">Register</Link>
                   </Button>
-                  <Button 
-                    size="lg" 
-                    className="bg-orange-500 hover:bg-orange-600 text-white"
-                    asChild
-                  >
-                    <Link to="/admin-login">
-                      Admin Login <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
+                  <Button asChild variant="outline" size="lg">
+                    <Link to="/rules">View Allotment Rules</Link>
                   </Button>
-                </>
-              )}
+                </div>
+              </div>
+              <div className="md:w-1/2 mt-8 md:mt-0">
+                <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-orange-50 p-4 rounded-xl flex items-start space-x-4">
+                      <User className="h-6 w-6 text-orange-500" />
+                      <div>
+                        <h3 className="font-medium">Student Portal</h3>
+                        <p className="text-sm text-gray-600">Apply for hostel accommodation</p>
+                      </div>
+                    </div>
+                    <div className="bg-blue-50 p-4 rounded-xl flex items-start space-x-4">
+                      <Building className="h-6 w-6 text-blue-500" />
+                      <div>
+                        <h3 className="font-medium">Admin Portal</h3>
+                        <p className="text-sm text-gray-600">Manage hostel allocation</p>
+                      </div>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-xl flex items-start space-x-4">
+                      <CheckCircle className="h-6 w-6 text-green-500" />
+                      <div>
+                        <h3 className="font-medium">Quick Allocation</h3>
+                        <p className="text-sm text-gray-600">Based on availability and score</p>
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 p-4 rounded-xl flex items-start space-x-4">
+                      <Clock className="h-6 w-6 text-purple-500" />
+                      <div>
+                        <h3 className="font-medium">Real-time Status</h3>
+                        <p className="text-sm text-gray-600">Track your application</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {infoCards.map((card, index) => (
-                <Link to="/rules" key={index}>
-                  <InfoCard
-                    title={card.title}
-                    icon={card.icon}
-                    onClick={card.onClick}
-                  />
-                </Link>
+          </div>
+        </section>
+        
+        {/* How it Works Section */}
+        <section className="py-16 px-4 bg-gray-50">
+          <div className="container mx-auto max-w-5xl">
+            <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-orange-500 font-bold text-xl">1</span>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Register & Apply</h3>
+                <p className="text-gray-600">Create an account, fill out the application form with your details and preferences.</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-orange-500 font-bold text-xl">2</span>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Review Process</h3>
+                <p className="text-gray-600">Administrators review applications and allocate rooms based on availability and priority scores.</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-orange-500 font-bold text-xl">3</span>
+                </div>
+                <h3 className="text-xl font-bold mb-3">Get Allocation</h3>
+                <p className="text-gray-600">Receive your room allocation details and complete the payment process.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Hostel Features Section */}
+        <section className="py-16 px-4">
+          <div className="container mx-auto max-w-5xl">
+            <h2 className="text-3xl font-bold text-center mb-12">Hostel Features</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                "Wi-Fi Access", 
+                "24/7 Security", 
+                "Clean Water Supply", 
+                "Mess Facilities",
+                "Laundry Service", 
+                "Study Rooms", 
+                "Recreation Areas", 
+                "Power Backup"
+              ].map((feature, index) => (
+                <div key={index} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                  <div className="flex items-center">
+                    <div className="mr-3 bg-orange-100 p-2 rounded-full">
+                      <CheckCircle className="h-4 w-4 text-orange-500" />
+                    </div>
+                    <span>{feature}</span>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
-      
-      {/* About Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8 text-hostel-dark">About Our Hostel</h2>
-          <div className="max-w-3xl mx-auto">
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600 mb-4">
-                  Our university hostels provide comfortable and secure accommodation for students, 
-                  with modern facilities and a conducive environment for academic pursuits. We offer 
-                  separate hostels for male and female students with all necessary amenities.
-                </p>
-                <p className="text-gray-600">
-                  The Hostel Allotment System streamlines the process of applying for and securing 
-                  hostel accommodation. Students can easily apply online, track their application status, 
-                  and receive allotment letters digitally.
-                </p>
-              </CardContent>
-            </Card>
+        </section>
+        
+        {/* CTA Section */}
+        <section className="bg-orange-500 py-16 px-4 text-white">
+          <div className="container mx-auto max-w-5xl text-center">
+            <h2 className="text-3xl font-bold mb-6">Ready to Apply for Hostel Accommodation?</h2>
+            <p className="text-lg mb-8 max-w-2xl mx-auto">
+              Create your account now to apply for hostel accommodation and track your application status.
+            </p>
+            <div className="flex justify-center gap-4 flex-wrap">
+              <Button asChild size="lg" variant="secondary" className="bg-white text-orange-500 hover:bg-gray-100">
+                <Link to="/register">Register Now</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-orange-600">
+                <Link to="/">
+                  Learn More <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
-        </div>
-      </section>
-      
-      {/* Features Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12 text-hostel-dark">Hostel Features</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="animate-fade-in">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="p-4 rounded-full bg-hostel-light text-hostel-primary mb-4">
-                  <Home className="h-6 w-6" />
-                </div>
-                <h3 className="font-semibold text-xl mb-2 text-hostel-dark">Modern Facilities</h3>
-                <p className="text-gray-600">
-                  Fully furnished rooms, high-speed Wi-Fi, study areas, and recreational zones for a comfortable stay.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="animate-fade-in delay-100">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="p-4 rounded-full bg-hostel-light text-hostel-primary mb-4">
-                  <Bed className="h-6 w-6" />
-                </div>
-                <h3 className="font-semibold text-xl mb-2 text-hostel-dark">Comfortable Rooms</h3>
-                <p className="text-gray-600">
-                  Well-designed rooms with proper ventilation, quality beds, and adequate storage space.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="animate-fade-in delay-200">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="p-4 rounded-full bg-hostel-light text-hostel-primary mb-4">
-                  <Book className="h-6 w-6" />
-                </div>
-                <h3 className="font-semibold text-xl mb-2 text-hostel-dark">Supportive Environment</h3>
-                <p className="text-gray-600">
-                  Wardens and staff available 24/7 to assist students with their needs and ensure safety.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
       
       <Footer />
     </div>

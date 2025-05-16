@@ -1,330 +1,137 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { AlertTriangle, BookOpen, Calendar, Clock, FileWarning, Home, ShieldAlert, Users } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Info } from 'lucide-react';
 
 const Rules = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-8 flex-1">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6 text-center">
-            <h1 className="text-3xl font-bold mb-2">Hostel Rules & Regulations</h1>
-            <p className="text-muted-foreground">
-              All students are expected to abide by these rules during their stay
-            </p>
-          </div>
+      <main className="flex-1 container mx-auto px-4 py-12">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8">Hostel Allocation Rules & Policies</h1>
           
-          <Tabs defaultValue="general">
-            <div className="mb-6">
-              <TabsList className="w-full grid grid-cols-1 md:grid-cols-4">
-                <TabsTrigger value="general">General Rules</TabsTrigger>
-                <TabsTrigger value="discipline">Discipline</TabsTrigger>
-                <TabsTrigger value="rooms">Room Guidelines</TabsTrigger>
-                <TabsTrigger value="mess">Mess Rules</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <TabsContent value="general">
-              <Card className="mb-6">
-                <CardHeader className="bg-hostel-light rounded-t-lg pb-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <BookOpen className="h-6 w-6 text-hostel-primary" />
-                    <CardTitle>General Rules & Regulations</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Fundamental rules that apply to all hostel residents
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent className="space-y-6 pt-6">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold flex items-center">
-                        <Clock className="h-4 w-4 mr-2 text-hostel-primary" />
-                        Hostel Timings
-                      </h3>
-                      <ul className="list-disc list-inside space-y-1 mt-2 ml-6">
-                        <li>Hostel gates close at 10:00 PM for all students.</li>
-                        <li>Students must return to the hostels before the gate closing time.</li>
-                        <li>Late entry is only allowed with prior permission from the warden.</li>
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-semibold flex items-center">
-                        <Home className="h-4 w-4 mr-2 text-hostel-primary" />
-                        Accommodation
-                      </h3>
-                      <ul className="list-disc list-inside space-y-1 mt-2 ml-6">
-                        <li>Rooms are allotted for one academic year only.</li>
-                        <li>Students cannot change rooms without prior permission from the hostel warden.</li>
-                        <li>Room furniture cannot be moved without permission.</li>
-                        <li>Students are responsible for the safety of their belongings.</li>
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-semibold flex items-center">
-                        <Users className="h-4 w-4 mr-2 text-hostel-primary" />
-                        Visitors
-                      </h3>
-                      <ul className="list-disc list-inside space-y-1 mt-2 ml-6">
-                        <li>Visitors are allowed only in the visitor's area between 4:00 PM and 8:00 PM.</li>
-                        <li>No visitors are allowed inside the hostel rooms.</li>
-                        <li>All visitors must sign the visitor's register and provide valid ID.</li>
-                        <li>Overnight stays by guests are strictly prohibited.</li>
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-semibold flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-hostel-primary" />
-                        Leave Rules
-                      </h3>
-                      <ul className="list-disc list-inside space-y-1 mt-2 ml-6">
-                        <li>Students planning to leave the hostel for more than 24 hours must obtain permission.</li>
-                        <li>Leave application must be submitted at least one day in advance.</li>
-                        <li>In case of emergency, students must inform the warden via phone.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </CardContent>
-                
-                <CardFooter className="text-sm text-muted-foreground border-t pt-4">
-                  These rules are subject to change. Any modifications will be communicated to all residents.
-                </CardFooter>
-              </Card>
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Eligibility Criteria</CardTitle>
+              <CardDescription>Requirements to apply for hostel accommodation</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="bg-orange-100 p-2 rounded-full">
+                  <Info className="h-4 w-4 text-orange-500" />
+                </div>
+                <p>Must be a registered full-time student of the university.</p>
+              </div>
+              <Separator />
+              <div className="flex items-start gap-4">
+                <div className="bg-orange-100 p-2 rounded-full">
+                  <Info className="h-4 w-4 text-orange-500" />
+                </div>
+                <p>Students whose permanent residence is more than 25 km away from the university will be given priority.</p>
+              </div>
+              <Separator />
+              <div className="flex items-start gap-4">
+                <div className="bg-orange-100 p-2 rounded-full">
+                  <Info className="h-4 w-4 text-orange-500" />
+                </div>
+                <p>Students must maintain a minimum CGPA of 6.0 to be eligible for hostel accommodation.</p>
+              </div>
+              <Separator />
+              <div className="flex items-start gap-4">
+                <div className="bg-orange-100 p-2 rounded-full">
+                  <Info className="h-4 w-4 text-orange-500" />
+                </div>
+                <p>Students with disciplinary actions against them may be denied hostel accommodation.</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Allocation Process</CardTitle>
+              <CardDescription>How rooms are allocated to eligible students</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <h3 className="font-medium">Socio-Geographic Scoring System</h3>
+              <p>Hostel rooms are allocated based on a scoring system that considers the following factors:</p>
+              <ul className="list-disc list-inside ml-4 space-y-2">
+                <li>Distance from permanent residence to university (30%)</li>
+                <li>Family income level (30%)</li>
+                <li>Academic performance/CGPA (20%)</li>
+                <li>Student year/seniority (10%)</li>
+                <li>Extracurricular activities and contribution to university (10%)</li>
+              </ul>
               
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Important Notice</AlertTitle>
-                <AlertDescription>
-                  Violation of hostel rules may result in disciplinary action, including but not limited to fines, 
-                  suspension of hostel privileges, or expulsion from the hostel.
-                </AlertDescription>
-              </Alert>
-            </TabsContent>
-            
-            <TabsContent value="discipline">
-              <Card>
-                <CardHeader className="bg-hostel-light rounded-t-lg pb-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <ShieldAlert className="h-6 w-6 text-hostel-primary" />
-                    <CardTitle>Discipline & Conduct</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Expected behavior and disciplinary guidelines for all residents
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent className="space-y-6 pt-6">
-                  <div>
-                    <h3 className="font-semibold mb-2">General Conduct</h3>
-                    <ul className="list-disc list-inside space-y-1 ml-6">
-                      <li>Students must maintain decorum and behave in a dignified manner.</li>
-                      <li>Creating nuisance, shouting, or playing loud music is strictly prohibited.</li>
-                      <li>Students must respect all hostel staff and follow their instructions.</li>
-                      <li>Dress code must be decent in common areas of the hostel.</li>
-                    </ul>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-semibold mb-2">Prohibited Activities</h3>
-                    <ul className="list-disc list-inside space-y-1 ml-6">
-                      <li>Consumption of alcohol, tobacco, or other intoxicating substances is strictly prohibited.</li>
-                      <li>Gambling in any form is not allowed within the hostel premises.</li>
-                      <li>Ragging in any form is a punishable offense as per UGC regulations.</li>
-                      <li>Keeping firearms, weapons, or inflammable materials is strictly prohibited.</li>
-                      <li>Cooking is not allowed in the hostel rooms.</li>
-                    </ul>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-semibold mb-2">Anti-Ragging Policy</h3>
-                    <p className="mb-2">
-                      Ragging in any form is strictly prohibited and is a punishable offense as per UGC regulations and Supreme Court directives.
-                    </p>
-                    <Alert variant="destructive" className="mt-2">
-                      <FileWarning className="h-4 w-4" />
-                      <AlertTitle>Zero Tolerance</AlertTitle>
-                      <AlertDescription>
-                        Any student found guilty of ragging will face immediate expulsion from the hostel and institution, 
-                        along with legal action as per prevailing laws.
-                      </AlertDescription>
-                    </Alert>
-                    <p className="mt-4 text-sm">
-                      Students can report ragging incidents to the Anti-Ragging Committee, Hostel Warden, 
-                      or call the National Anti-Ragging Helpline: <strong>1800-180-5522</strong>
-                    </p>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-semibold mb-2">Disciplinary Actions</h3>
-                    <p className="mb-2">The following actions may be taken against violations of hostel rules:</p>
-                    <ol className="list-decimal list-inside space-y-1 ml-6">
-                      <li>Verbal warning for minor first-time offenses</li>
-                      <li>Written warning with information to parents/guardians</li>
-                      <li>Monetary fine depending on the severity of the offense</li>
-                      <li>Suspension from the hostel for a specified period</li>
-                      <li>Expulsion from the hostel in case of serious violations</li>
-                    </ol>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="rooms">
-              <Card>
-                <CardHeader className="bg-hostel-light rounded-t-lg pb-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Home className="h-6 w-6 text-hostel-primary" />
-                    <CardTitle>Room Guidelines</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Rules for maintenance and usage of hostel rooms
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent className="space-y-6 pt-6">
-                  <div>
-                    <h3 className="font-semibold mb-2">Room Allotment</h3>
-                    <ul className="list-disc list-inside space-y-1 ml-6">
-                      <li>Room allotment is done at the beginning of each academic year.</li>
-                      <li>Students cannot change rooms without prior permission from the warden.</li>
-                      <li>The administration reserves the right to relocate students if required.</li>
-                    </ul>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-semibold mb-2">Room Maintenance</h3>
-                    <ul className="list-disc list-inside space-y-1 ml-6">
-                      <li>Students are responsible for keeping their rooms clean and tidy.</li>
-                      <li>Rooms will be inspected periodically by the hostel administration.</li>
-                      <li>Walls must not be defaced by posters, nails, or adhesive materials.</li>
-                      <li>Room furniture cannot be moved or exchanged without permission.</li>
-                      <li>Any damage to room property will be charged to the occupant(s).</li>
-                    </ul>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-semibold mb-2">Electrical Appliances</h3>
-                    <ul className="list-disc list-inside space-y-1 ml-6">
-                      <li>Use of electrical appliances such as heaters, irons, and hot plates is prohibited.</li>
-                      <li>Laptop and mobile chargers are permitted.</li>
-                      <li>Students should switch off lights and fans when leaving the room.</li>
-                      <li>Any electrical issue must be reported to the hostel office immediately.</li>
-                    </ul>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-semibold mb-2">Room Checkout Procedure</h3>
-                    <ul className="list-disc list-inside space-y-1 ml-6">
-                      <li>Students must vacate their rooms within 3 days after the end of the academic year.</li>
-                      <li>A formal room check-out process must be followed.</li>
-                      <li>Room keys must be returned to the warden.</li>
-                      <li>All personal belongings must be taken or properly disposed of.</li>
-                      <li>Any damage cost will be deducted from the caution deposit.</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="mess">
-              <Card>
-                <CardHeader className="bg-hostel-light rounded-t-lg pb-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Users className="h-6 w-6 text-hostel-primary" />
-                    <CardTitle>Mess Rules</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Guidelines for dining and mess facilities
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent className="space-y-6 pt-6">
-                  <div>
-                    <h3 className="font-semibold mb-2">Mess Timings</h3>
-                    <div className="grid grid-cols-2 gap-4 ml-6">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Breakfast</p>
-                        <p>7:00 AM - 9:00 AM</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Lunch</p>
-                        <p>12:00 PM - 2:00 PM</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Snacks</p>
-                        <p>4:30 PM - 5:30 PM</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Dinner</p>
-                        <p>7:30 PM - 9:30 PM</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-semibold mb-2">Mess Guidelines</h3>
-                    <ul className="list-disc list-inside space-y-1 ml-6">
-                      <li>Mess fees must be paid in advance as per the payment schedule.</li>
-                      <li>Students must carry their ID cards to the dining hall.</li>
-                      <li>Food will only be served during the specified timings.</li>
-                      <li>Proper queue must be maintained while collecting food.</li>
-                      <li>Wastage of food is strictly prohibited.</li>
-                      <li>Proper dining etiquette must be observed in the mess.</li>
-                    </ul>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-semibold mb-2">Mess Rebate</h3>
-                    <ul className="list-disc list-inside space-y-1 ml-6">
-                      <li>Students are eligible for mess rebate only during official vacation periods.</li>
-                      <li>Mess rebate forms must be submitted at least 3 days in advance.</li>
-                      <li>Minimum period for mess rebate is 5 consecutive days.</li>
-                      <li>Maximum rebate allowed is 15 days per semester.</li>
-                      <li>No mess rebate will be given during the first and last week of each semester.</li>
-                    </ul>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="font-semibold mb-2">Special Diet</h3>
-                    <p className="ml-6">
-                      Students requiring special diets due to medical conditions must submit a request along with a medical certificate.
-                      The mess committee will make necessary arrangements based on the availability of resources.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              <h3 className="font-medium mt-6">Allocation Timeline</h3>
+              <ol className="list-decimal list-inside ml-4 space-y-2">
+                <li>Applications open: 4 weeks before semester starts</li>
+                <li>Application deadline: 2 weeks before semester starts</li>
+                <li>Allocation results: 1 week before semester starts</li>
+                <li>Room check-in: 3 days before semester starts</li>
+              </ol>
+            </CardContent>
+          </Card>
+          
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Room Types & Facilities</CardTitle>
+              <CardDescription>Different types of accommodation available</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="border p-2 text-left">Room Type</th>
+                      <th className="border p-2 text-left">Capacity</th>
+                      <th className="border p-2 text-left">Facilities</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border p-2">Standard Room</td>
+                      <td className="border p-2">2-3 Students</td>
+                      <td className="border p-2">Bed, Study table, Chair, Wardrobe, Common bathroom</td>
+                    </tr>
+                    <tr>
+                      <td className="border p-2">Semi-Private Room</td>
+                      <td className="border p-2">1-2 Students</td>
+                      <td className="border p-2">Bed, Study table, Chair, Wardrobe, Attached bathroom</td>
+                    </tr>
+                    <tr>
+                      <td className="border p-2">Single Room</td>
+                      <td className="border p-2">1 Student</td>
+                      <td className="border p-2">Bed, Study table, Chair, Wardrobe, Attached bathroom, AC</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Hostel Rules & Regulations</CardTitle>
+              <CardDescription>Rules to be followed by all hostel residents</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ul className="list-disc list-inside ml-4 space-y-2">
+                <li>Hostel fees must be paid within the specified deadline.</li>
+                <li>Visitors are only allowed in common areas during visiting hours.</li>
+                <li>Strict adherence to hostel timings is mandatory.</li>
+                <li>Consumption of alcohol, tobacco, and drugs is strictly prohibited.</li>
+                <li>Students are responsible for keeping their rooms and common areas clean.</li>
+                <li>Damage to hostel property will result in fines and disciplinary action.</li>
+                <li>Electric appliances (except laptops, mobile phones, etc.) are not allowed without permission.</li>
+                <li>Ragging in any form is strictly prohibited and will result in immediate expulsion.</li>
+              </ul>
+            </CardContent>
+          </Card>
         </div>
       </main>
       
