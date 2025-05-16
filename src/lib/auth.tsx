@@ -1,16 +1,20 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
+type UserType = 'student' | 'admin';
+
 type AuthContextType = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  userType: UserType | null;
   signUp: (email: string, password: string, metadata: any) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, type: UserType) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -21,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userType, setUserType] = useState<UserType | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,6 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (currentSession?.user) {
           const isUserAdmin = currentSession.user.app_metadata?.role === 'admin';
           setIsAdmin(isUserAdmin);
+          setUserType(isUserAdmin ? 'admin' : 'student');
+        } else {
+          setUserType(null);
         }
         
         // Handle events
@@ -51,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentSession?.user) {
         const isUserAdmin = currentSession.user.app_metadata?.role === 'admin';
         setIsAdmin(isUserAdmin);
+        setUserType(isUserAdmin ? 'admin' : 'student');
       }
 
       setIsLoading(false);
@@ -89,9 +98,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, type: UserType) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -100,10 +109,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
+      // Verify user type matches
+      if (type === 'admin' && data.user?.app_metadata?.role !== 'admin') {
+        await supabase.auth.signOut();
+        throw new Error("You're not authorized as an administrator");
+      } else if (type === 'student' && data.user?.app_metadata?.role === 'admin') {
+        await supabase.auth.signOut();
+        throw new Error("Please use the administrator login");
+      }
+      
+      setUserType(type);
       toast({
         title: "Login successful!",
       });
-      navigate(isAdmin ? '/admin' : '/dashboard');
+      navigate(type === 'admin' ? '/admin' : '/dashboard');
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -120,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         throw error;
       }
+      setUserType(null);
       toast({
         title: "Successfully signed out",
       });
@@ -134,7 +154,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isLoading, 
+      isAdmin, 
+      userType, 
+      signUp, 
+      signIn, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -149,7 +178,7 @@ export function useAuth() {
 }
 
 export function RequireAuth({ children, admin = false }: { children: React.ReactNode, admin?: boolean }) {
-  const { user, isLoading, isAdmin } = useAuth();
+  const { user, isLoading, isAdmin, userType } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -165,7 +194,16 @@ export function RequireAuth({ children, admin = false }: { children: React.React
         variant: "destructive"
       });
     }
-  }, [user, isLoading, isAdmin, admin, navigate]);
+
+    // Redirect if user type doesn't match expected type
+    if (!isLoading && user && userType) {
+      if (admin && userType !== 'admin') {
+        navigate('/dashboard');
+      } else if (!admin && userType === 'admin' && window.location.pathname.startsWith('/dashboard')) {
+        navigate('/admin');
+      }
+    }
+  }, [user, isLoading, isAdmin, userType, admin, navigate]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;

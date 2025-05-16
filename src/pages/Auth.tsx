@@ -80,7 +80,7 @@ const Auth = () => {
   const onLoginSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      await signIn(data.email, data.password);
+      await signIn(data.email, data.password, loginType);
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -92,6 +92,7 @@ const Auth = () => {
     setIsLoading(true);
     try {
       const { name, email, password, phone, gender, department } = data;
+      // For registration, we assume it's always a student
       await signUp(email, password, { name, phone, gender, department });
       navigate('/auth', { state: { tab: 'login' } });
     } catch (error) {
@@ -107,6 +108,19 @@ const Auth = () => {
       
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="max-w-md mx-auto">
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-bold mb-2">
+              {activeTab === 'login' ? 
+                (loginType === 'admin' ? 'Administrator Login' : 'Student Login') : 
+                activeTab === 'register' ? 'Student Registration' : 'Reset Password'}
+            </h1>
+            <p className="text-muted-foreground">
+              {activeTab === 'login' ? 'Welcome back! Enter your credentials to continue.' :
+               activeTab === 'register' ? 'Create a new account to access hostel services.' :
+               'Reset your password to continue.'}
+            </p>
+          </div>
+          
           {activeTab === 'reset-password' ? (
             <Card>
               <CardHeader>
@@ -129,7 +143,7 @@ const Auth = () => {
               <TabsContent value="login">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Login</CardTitle>
+                    <CardTitle>{loginType === 'admin' ? 'Administrator Login' : 'Student Login'}</CardTitle>
                     <CardDescription>
                       Enter your credentials to access your account
                     </CardDescription>
@@ -158,7 +172,7 @@ const Auth = () => {
                                 <FormItem>
                                   <FormLabel>Email</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="Your email address" {...field} />
+                                    <Input placeholder={`${loginType === 'admin' ? 'Administrator' : 'Student'} email address`} {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -202,7 +216,7 @@ const Auth = () => {
               <TabsContent value="register">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Register</CardTitle>
+                    <CardTitle>Student Registration</CardTitle>
                     <CardDescription>
                       Create a new account to apply for hostel
                     </CardDescription>
